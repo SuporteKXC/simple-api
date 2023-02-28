@@ -9,7 +9,7 @@
   "main": "index.js",
   "devDependencies": {},
   "scripts": {
-    "start": "node ."
+    "start": "node src/index.js"
   },
   "keywords": [],
   "author": "",
