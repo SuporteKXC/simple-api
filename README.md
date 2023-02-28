@@ -4,7 +4,7 @@
 Uma API em Node.js utilizando o Express Framework que realiza a conexão com um banco de dados PostgreSQL.
 
 ## Como utilizar
-O comando para iniciar a API é **npm run start.**
+O comando para iniciar a API é **npm run start**
 
 ## Rotas
 | Rota | Método | Descrição |
