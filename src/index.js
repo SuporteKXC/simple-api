@@ -24,10 +24,11 @@ const express = require('express');
     app.get('/connect', async (req, res) => {
         try {
             const client = new Client({
-                host: process.env.DB_HOST,
-                port: process.env.DB_PORT || 5432,
                 user: process.env.DB_USER,
+                host: process.env.DB_HOST,
+                database: process.env.DB_DATABASE,
                 password: process.env.DB_PASSWORD,
+                port: process.env.DB_PORT || 5432,
             })
             await client.connect()
 
