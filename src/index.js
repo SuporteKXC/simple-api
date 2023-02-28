@@ -16,7 +16,9 @@ const express = require('express');
     })
 
     app.get('/', async (req, res) => {
-        res.send({ 'message': "API OK!", 'request_id': i })
+        const response = { 'message': "API OK!", 'request_id': i }
+        console.log(response)
+        res.send(response)
     })
 
     app.get('/connect', async (req, res) => {
