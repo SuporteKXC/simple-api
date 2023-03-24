@@ -14,7 +14,7 @@ const axios = require('axios');
 
     app.use(express.json());
 
-    const port = process.env.API_PORT || 3000
+    const port = process.env.API_PORT || 80
     let i = 0
 
     app.listen(port, () => {
@@ -33,10 +33,18 @@ const axios = require('axios');
     })
 
     app.post('/process', async (req, res) => {
+
         const delay = req.body.delay
         const response = { 'message': "Processado!", 'request_id': i, 'delay': delay }
 
         console.log('Processando...')
+
+        AWSXRay.captureAsyncFunc('query-data', function (subsegment) {
+            setTimeout(() => {
+
+                subsegment.close();
+            }, 500)
+        });
 
         AWSXRay.captureAsyncFunc('process-data', function (subsegment) {
             setTimeout(() => {
@@ -48,18 +56,23 @@ const axios = require('axios');
 
             }, delay ? 1000 : 200)
         });
+
     })
 
     app.post('/time', async (req, res) => {
         const delay = req.body.delay
         const response = { 'message': "Request Executado!", 'request_id': i, 'delay': delay }
 
-        const apiRes = await axios({
-            url: 'http://worldtimeapi.org/api/timezone/America/Sao_Paulo',
-            method: 'GET'
-        })
+        try {
+            const apiRes = await axios({
+                url: 'http://worldtimeapi.org/api/timezone/America/Sao_Paulo',
+                method: 'GET'
+            })
+            response.time = apiRes.data
 
-        response.time = apiRes.data
+        } catch (e) {
+            response.error = e
+        }
 
         AWSXRay.captureAsyncFunc('process-api-result', function (subsegment) {
 
