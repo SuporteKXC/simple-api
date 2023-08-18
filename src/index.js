@@ -7,7 +7,7 @@ const axios = require('axios');
 
     app.use(express.json());
 
-    const port = process.env.API_PORT || 80
+    const port = process.env.API_PORT || 8080
 
     let i = 0
 
