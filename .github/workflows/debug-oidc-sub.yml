@@ -1,0 +1,38 @@
+# Workflow TEMPORARIO de diagnostico: imprime o claim `sub` do token OIDC do GitHub.
+# Nao toca na AWS, nao assume role, nao usa secret. Serve so para descobrir o formato real do sub
+# (nomes vs IDs imutaveis) e corrigir a trust policy das roles. Apagar depois de usar.
+name: debug-oidc-sub
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "Environment para espelhar o sub do deploy/infra (deixe vazio para o sub sem environment)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  print-sub:
+    runs-on: ubuntu-24.04
+    # environment e aplicado condicionalmente para ver o sub com e sem environment
+    environment: ${{ inputs.target_env }}
+    steps:
+      - name: Obter e decodificar o claim sub do token OIDC
+        run: |
+          set -euo pipefail
+          TOKEN="$(curl -sS -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"])')"
+          PAYLOAD="$(echo "$TOKEN" | cut -d. -f2)"
+          # padding base64url
+          case $(( ${#PAYLOAD} % 4 )) in 2) PAYLOAD="${PAYLOAD}==";; 3) PAYLOAD="${PAYLOAD}=";; esac
+          CLAIMS="$(echo "$PAYLOAD" | tr '_-' '/+' | base64 -d 2>/dev/null)"
+          echo "sub   = $(echo "$CLAIMS" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("sub"))')"
+          echo "aud   = $(echo "$CLAIMS" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("aud"))')"
+          echo "owner = $(echo "$CLAIMS" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(d.get("repository_owner"), d.get("repository_owner_id"))')"
+          {
+            echo "sub=$(echo "$CLAIMS" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("sub"))')"
+          } >> "$GITHUB_STEP_SUMMARY"
